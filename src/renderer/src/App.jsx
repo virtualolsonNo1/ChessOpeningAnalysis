@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
+import { Random } from 'random-js';
+
+const random = new Random()
 
 
-
-const openings = { 
+const openings_fen = { 
      random: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
      italian: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3',
      sicilian: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2',
@@ -41,21 +43,29 @@ function App() {
   }
   
   function loadRandomPosition() {
-    const openingURL = encodeURIComponent(openings[opening])
-    console.log(openingURL)
-    const response = fetch('/lichess/masters?fen=' + openingURL).then(response => response.json()).then(data => {
+    let year = random.integer(1980, 2024)
+    let month = random.integer(0, 12)
+    // TODO: REPLACE SINCE AND UNTIL WITH RANDOM YEARS
+    fetch(`/lichess/masters?fen=${openings_fen[opening]}&since=${year}&until=${year}`).then(response => response.json()).then(data => {
       //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
       console.log(data);
-    }).catch(error => {console.log("INVALID DATA")})
+    }).catch(error => {console.log("INVALID DATA2")})
+
+    year = 2016
+    month = 12
+    fetch(`/lichess/lichess?fen=${openings_fen[opening]}&since=${year}-${month}&until=${year}-${month}&ratings=2200`).then(response => response.json()).then(data => {
+      //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
+      console.log(data);
+    }).catch(error => {console.log("INVALID DATA2")})
   }
   
   function displayOpening(opening) {
     // Update the game state
     console.log(opening)
-    console.log(openings[opening])
+    console.log(openings_fen[opening])
 
     setOpening(opening)
-    setGame(new Chess(openings[opening]));
+    setGame(new Chess(openings_fen[opening]));
   }
 
   return (

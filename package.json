@@ -22,6 +22,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/cli": "^4.0.7",
     "chess.js": "^1.0.0",
+    "random-js": "^2.1.0",
     "react-chessboard": "^4.7.2"
   },
   "devDependencies": {
