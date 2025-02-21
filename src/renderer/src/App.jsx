@@ -5,7 +5,7 @@ import { Chess } from 'chess.js';
 
 
 const openings = { 
-     random: '',
+     random: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
      italian: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3',
      sicilian: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2',
      french: 'rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3',
@@ -67,6 +67,8 @@ function App() {
             <option value="random">Random</option>
             <option value="italian">Italian Game</option>
             <option value="sicilian">Sicilian Defense</option>
+            <option value="french">French Defense</option>
+            <option value="caro">Caro Kann</option>
           </select>
           <button onClick={loadRandomPosition}>Next Position</button>
         </div>
