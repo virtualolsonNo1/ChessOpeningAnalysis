@@ -9,8 +9,7 @@ function createWindow() {
     width: 350,
     height: 200,
     show: false,
-    frame:false,
-    transparent:true,
+    frame: true,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -54,19 +53,19 @@ app.whenReady().then(() => {
 
   // IPC test
   // ipcMain.on('ping', () => console.log('pong'))
-  ipcMain.on("close-window", ()=>{
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      currentWindow.close()
-    }
-  })
+  // ipcMain.on("close-window", ()=>{
+  //   const currentWindow = BrowserWindow.getFocusedWindow();
+  //   if (currentWindow) {
+  //     currentWindow.close()
+  //   }
+  // })
 
-  ipcMain.on("minimize-window", ()=>{
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      currentWindow.minimize()
-    }
-  })
+  // ipcMain.on("minimize-window", ()=>{
+  //   const currentWindow = BrowserWindow.getFocusedWindow();
+  //   if (currentWindow) {
+  //     currentWindow.minimize()
+  //   }
+  // })
   createWindow()
 
   app.on('activate', function () {
