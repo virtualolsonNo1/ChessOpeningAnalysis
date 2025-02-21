@@ -15,6 +15,15 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react()]
+    plugins: [react()],
+    server: {
+      proxy: {
+        '/lichess': {
+          target: 'https://explorer.lichess.ovh',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/lichess/, '')
+        }
+      }
+    }
   }
 })

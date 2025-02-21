@@ -40,6 +40,11 @@ function App() {
   }
   
   function loadRandomPosition(opening) {
+    const response = fetch('/lichess/masters?fen=r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R%20b%20KQkq%20-%203%203').then(response => response.json()).then(data => {
+      //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
+      console.log(data);
+    }).catch(error => {console.log("INVALID DATA")})
+    // console.log(response)
   }
   
   function displayOpening(opening) {
