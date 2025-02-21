@@ -16,6 +16,7 @@ function App() {
   // Initialize the game state with a new Chess instance
   const [game, setGame] = useState(new Chess());
   const [feedback, setFeedback] = useState("Find the best move in this position");
+  const [opening, setOpening] = useState("random");
   
   // Define the onDrop function
   function onDrop(sourceSquare, targetSquare) {
@@ -39,12 +40,13 @@ function App() {
     }
   }
   
-  function loadRandomPosition(opening) {
-    const response = fetch('/lichess/masters?fen=r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R%20b%20KQkq%20-%203%203').then(response => response.json()).then(data => {
+  function loadRandomPosition() {
+    const openingURL = encodeURIComponent(openings[opening])
+    console.log(openingURL)
+    const response = fetch('/lichess/masters?fen=' + openingURL).then(response => response.json()).then(data => {
       //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
       console.log(data);
     }).catch(error => {console.log("INVALID DATA")})
-    // console.log(response)
   }
   
   function displayOpening(opening) {
@@ -52,6 +54,7 @@ function App() {
     console.log(opening)
     console.log(openings[opening])
 
+    setOpening(opening)
     setGame(new Chess(openings[opening]));
   }
 
