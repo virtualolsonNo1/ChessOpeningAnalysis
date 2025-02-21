@@ -42,20 +42,22 @@ function App() {
     }
   }
   
-  function loadRandomPosition() {
+  async function loadRandomPosition() {
+    let numMoves = random.integer(1, 7)
     let year = random.integer(1980, 2024)
     let month = random.integer(0, 12)
     // TODO: REPLACE SINCE AND UNTIL WITH RANDOM YEARS
-    fetch(`/lichess/masters?fen=${openings_fen[opening]}&since=${year}&until=${year}`).then(response => response.json()).then(data => {
-      //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
-      console.log(data);
-    }).catch(error => {console.log("INVALID DATA2")})
+    const response = await fetch(`/lichess/masters?fen=${openings_fen[opening]}`).catch(error => {console.log("INVALID DATA2")})
+    const data =  await response.json()
+    console.log(data)
+    console.log(data.moves.length)
 
-    year = 2016
-    month = 12
-    fetch(`/lichess/lichess?fen=${openings_fen[opening]}&since=${year}-${month}&until=${year}-${month}&ratings=2200`).then(response => response.json()).then(data => {
+    // year = 2016
+    // month = 12
+    fetch(`/lichess/lichess?fen=${openings_fen[opening]}&ratings=2200`).then(response => response.json()).then(data => {
       //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
       console.log(data);
+      console.log(data.moves.length)
     }).catch(error => {console.log("INVALID DATA2")})
   }
   
