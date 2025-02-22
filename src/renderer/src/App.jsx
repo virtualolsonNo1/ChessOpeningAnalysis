@@ -19,6 +19,8 @@ function App() {
   const [game, setGame] = useState(new Chess());
   const [feedback, setFeedback] = useState("Find the best move in this position");
   const [opening, setOpening] = useState("random");
+  const [minELO, setMinELO] = useState("1800");
+  const [error, setError] = useState('');
   
   // Define the onDrop function
   function onDrop(sourceSquare, targetSquare) {
@@ -39,6 +41,12 @@ function App() {
     } catch (error) {
       console.error("Error in onDrop:", error);
       return false;
+    }
+  }
+  
+  function updateMinELO(newELO) {
+    if (newELO <= 2500 && newELO >= 0) {
+    setMinELO(newELO)
     }
   }
   
@@ -90,6 +98,18 @@ function App() {
             <option value="french">French Defense</option>
             <option value="caro">Caro Kann</option>
           </select>
+        <h2>ELO Rating Input</h2>
+                <div>
+                  <label htmlFor="eloInput">Enter ELO Rating (0-2500):</label>
+                  <input
+                    id="eloInput"
+                    type="number"
+                    min="0"
+                    max="2500"
+                    value={minELO}
+                    onChange={(e) => updateMinELO(e.target.value)}
+                  />
+                </div>
           <button onClick={loadRandomPosition}>Next Position</button>
         </div>
       </div>
