@@ -22,6 +22,10 @@ const openings_fen = {
   }
 
   async function loadRandomPosition(setGame, opening, minELO, allowDrop) {
+
+    // re-render current opening before displaying new position
+    setGame(new Chess(openings_fen[opening.current]))
+
     let numMoves = random.integer(1, 7)
     console.log("Num random moves: " + numMoves)
     let year = random.integer(1980, 2024)
@@ -43,20 +47,13 @@ const openings_fen = {
         to: data.moves[moveNum].uci.substring(2, 4),
       })
       position_fen = board.fen()
-      setGame(new Chess(position_fen))
+      // TODO: DO WE WANT TO TRY TO ANIMATE OUT MOVES? WASN"T SMOOTH PREVIOUSLY AS TWAS A LOT OF RENDERING!!!
+      // setGame(new Chess(position_fen))
 
     }
     
     allowDrop.current = true
     setGame(new Chess(position_fen))
-
-    // year = 2016
-    // month = 12
-    // fetch(`/lichess/lichess?fen=${openings_fen[opening]}&ratings=2200`).then(response => response.json()).then(data => {
-    //   //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
-    //   console.log(data);
-    //   console.log(data.moves.length)
-    // }).catch(error => {console.log("INVALID DATA2")})
   }
 
 
