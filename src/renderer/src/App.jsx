@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { Random } from 'random-js';
@@ -14,26 +14,6 @@ const openings_fen = {
      caro: 'rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3'
 };
 
-// Define the onDrop function
-function onDrop(sourceSquare, targetSquare, setGame) {
-  try {
-    // Check if the move is legal
-    const move = game.move({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: 'q', // always promote to queen for simplicity
-    });
-      // If the move is illegal, return false to revert
-      if (move === null) return false;
-
-      // Update the game state
-      setGame(new Chess(game.fen()));
-      return true;
-    } catch (error) {
-      console.error("Error in onDrop:", error);
-      return false;
-    }
-  }
 
   function updateMinELO(newELO, setMinELO) {
     if (newELO <= 2500 && newELO >= 0) {
@@ -47,7 +27,7 @@ function onDrop(sourceSquare, targetSquare, setGame) {
     let year = random.integer(1980, 2024)
     let month = random.integer(0, 12)
     
-    let position_fen = openings_fen[opening]
+    let position_fen = openings_fen[opening.current]
     for (let i = 0; i < numMoves; i++) {
       // const response = await fetch(`/lichess/masters?fen=${openings_fen[opening]}`).catch(error => {console.log("INVALID DATA2")})
       const response = await fetch(`/lichess/lichess?fen=${position_fen}&ratings=2200`).catch(error => {console.log("INVALID DATA2")})
@@ -76,13 +56,13 @@ function onDrop(sourceSquare, targetSquare, setGame) {
     // }).catch(error => {console.log("INVALID DATA2")})
   }
 
-  function displayOpening(opening, setOpening, setGame) {
+  function displayOpening(new_opening, opening, setGame) {
+    opening.current = new_opening;
     // Update the game state
-    console.log(opening)
-    console.log(openings_fen[opening])
+    console.log(opening.current)
+    console.log(openings_fen[opening.current])
 
-    setOpening(opening)
-    setGame(new Chess(openings_fen[opening]));
+    setGame(new Chess(openings_fen[new_opening]));
   }
 
 function App() {
@@ -90,9 +70,30 @@ function App() {
 // Initialize the game state with a new Chess instance
 const [game, setGame] = useState(new Chess());
 const [feedback, setFeedback] = useState("Find the best move in this position");
-const [opening, setOpening] = useState("random");
+const opening = useRef("random");
 const [minELO, setMinELO] = useState("1800");
   
+
+// Define the onDrop function
+function onDrop(sourceSquare, targetSquare) {
+  try {
+    // Check if the move is legal
+    const move = game.move({
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: 'q', // always promote to queen for simplicity
+    });
+      // If the move is illegal, return false to revert
+      if (move === null) return false;
+
+      // Update the game state
+      setGame(new Chess(game.fen()));
+      return true;
+    } catch (error) {
+      console.error("Error in onDrop:", error);
+      return false;
+    }
+  }
   return (
   <div className="container mx-auto p-4">
     {/* Mobile: stacked, Desktop: side-by-side */}
@@ -106,7 +107,7 @@ const [minELO, setMinELO] = useState("1800");
         <div className="bg-gray-100 p-4 rounded">
           <h2>Position Information</h2>
           <p>{feedback}</p>
-          <select onChange={(e) => displayOpening(e.target.value, setOpening, setGame)}>
+          <select onChange={(e) => displayOpening(e.target.value, opening, setGame)}>
             <option value="random">Random</option>
             <option value="italian">Italian Game</option>
             <option value="sicilian">Sicilian Defense</option>
