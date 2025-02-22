@@ -82,6 +82,7 @@ function onDrop(sourceSquare, targetSquare) {
 
       // Update the game state
       setGame(new Chess(game.fen()));
+      allowDrop.current = false;
       return true;
     } catch (error) {
       console.error("Error in onDrop:", error);
