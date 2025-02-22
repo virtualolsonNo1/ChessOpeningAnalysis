@@ -119,6 +119,11 @@ function onDrop(sourceSquare, targetSquare) {
 
   function displayOpening(new_opening, opening, setGame, allowDrag) {
     // TODO: ADD IN RESET FOR MOVES INFO HERE, so that when reset !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // re-set move text before re-render
+    masterMove0.current = "";
+    masterMove1.current = "";
+    masterMove2.current = "";
+
     opening.current = new_opening;
     // Update the game state
     console.log(opening.current)
