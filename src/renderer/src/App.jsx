@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { Random } from 'random-js';
@@ -21,18 +21,19 @@ const openings_fen = {
     }
   }
 
-  async function loadRandomPosition(setGame, opening, allowDrop) {
+  async function loadRandomPosition(setGame, opening, minELO, allowDrop) {
     let numMoves = random.integer(1, 7)
-    console.log(numMoves)
+    console.log("Num random moves: " + numMoves)
     let year = random.integer(1980, 2024)
     let month = random.integer(0, 12)
     
     let position_fen = openings_fen[opening.current]
     for (let i = 0; i < numMoves; i++) {
       // const response = await fetch(`/lichess/masters?fen=${openings_fen[opening]}`).catch(error => {console.log("INVALID DATA2")})
-      const response = await fetch(`/lichess/lichess?fen=${position_fen}&ratings=2200`).catch(error => {console.log("INVALID DATA2")})
+      const response = await fetch(`/lichess/lichess?fen=${position_fen}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
       const data =  await response.json()
       let moveNum = random.integer(0, data.moves.length - 1)
+      console.log("Random move to choose: " + moveNum)
       
       console.log(data)
       console.log(data.moves[moveNum].uci)
@@ -42,6 +43,7 @@ const openings_fen = {
         to: data.moves[moveNum].uci.substring(2, 4),
       })
       position_fen = board.fen()
+      setGame(new Chess(position_fen))
 
     }
     
@@ -66,21 +68,51 @@ const [feedback, setFeedback] = useState("Find the best move in this position");
 const [minELO, setMinELO] = useState("1800");
 const opening = useRef("random");
 const allowDrop = useRef(false);
+const needFetchInfo = useRef(false);
+const prevFEN = useRef(game.fen())
+
+async function fetchInfo() {
+  const localFEN = prevFEN.current
+  const response = await fetch(`/lichess/masters?fen=${localFEN}`).catch(error => {console.log("INVALID DATA2")})
+  // const response = await fetch(`/lichess/lichess?fen=${game.fen()}&ratings=2200`).catch(error => {console.log("INVALID DATA2")})
+  const data =  await response.json()
+  console.log(data.moves[0])
+  console.log(data.moves[1])
+  console.log(data.moves[2])
   
+  // TODO: trigger all these BEFORE onDrop, probably by moving where needFetchInfo is changed to true
+  if (data.moves[0] == undefined && data.moves[2] == undefined && data.moves[3] == undefined) {
+    const response = await fetch(`/lichess/lichess?fen=${localFEN}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
+    const data =  await response.json()
+    console.log(data.moves[0])
+    console.log(data.moves[1])
+    console.log(data.moves[2])
+    
+  }
+}
+  
+const fetchPositionInfo = useEffect(() => {
+  if (needFetchInfo.current) {
+    fetchInfo();
+    needFetchInfo.current = false;
+  }
+
+}, [allowDrop.current])
 
 // Define the onDrop function
 function onDrop(sourceSquare, targetSquare) {
+  prevFEN.current = game.fen()
   try {
     // Check if the move is legal
     const move = game.move({
       from: sourceSquare,
       to: targetSquare,
-      promotion: 'q', // always promote to queen for simplicity
     });
       // If the move is illegal, return false to revert
       if (move === null) return false;
 
       // Update the game state
+      needFetchInfo.current = true;
       setGame(new Chess(game.fen()));
       allowDrop.current = false;
       return true;
@@ -107,7 +139,7 @@ function onDrop(sourceSquare, targetSquare) {
     <div className="flex flex-col md:flex-row gap-4">
       {/* Chess board */}
       <div className="w-full md:w-2/3">
-        <Chessboard position={game.fen()} onPieceDrop={onDrop} arePiecesDraggable={allowDrop.current}/>
+        <Chessboard position={game.fen()} onPieceDrop={onDrop} arePiecesDraggable={allowDrop.current} animationDuration={300}/>
 
       {/* Controls & Info */}
       <div className="w-full">
@@ -133,7 +165,7 @@ function onDrop(sourceSquare, targetSquare) {
                     onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                   />
                 </div>
-          <button onClick={() => loadRandomPosition(setGame, opening, allowDrop)}>Next Position</button>
+          <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop)}>Next Position</button>
         </div>
       </div>
       
