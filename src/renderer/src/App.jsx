@@ -21,7 +21,7 @@ const openings_fen = {
     }
   }
 
-  async function loadRandomPosition(setGame, opening) {
+  async function loadRandomPosition(setGame, opening, allowDrop) {
     let numMoves = random.integer(1, 7)
     console.log(numMoves)
     let year = random.integer(1980, 2024)
@@ -45,6 +45,7 @@ const openings_fen = {
 
     }
     
+    allowDrop.current = true
     setGame(new Chess(position_fen))
 
     // year = 2016
@@ -56,22 +57,15 @@ const openings_fen = {
     // }).catch(error => {console.log("INVALID DATA2")})
   }
 
-  function displayOpening(new_opening, opening, setGame) {
-    opening.current = new_opening;
-    // Update the game state
-    console.log(opening.current)
-    console.log(openings_fen[opening.current])
-
-    setGame(new Chess(openings_fen[new_opening]));
-  }
 
 function App() {
 // change 
 // Initialize the game state with a new Chess instance
 const [game, setGame] = useState(new Chess());
 const [feedback, setFeedback] = useState("Find the best move in this position");
-const opening = useRef("random");
 const [minELO, setMinELO] = useState("1800");
+const opening = useRef("random");
+const allowDrop = useRef(false);
   
 
 // Define the onDrop function
@@ -94,20 +88,32 @@ function onDrop(sourceSquare, targetSquare) {
       return false;
     }
   }
+  
+
+  function displayOpening(new_opening, opening, setGame, allowDrag) {
+    opening.current = new_opening;
+    // Update the game state
+    console.log(opening.current)
+    console.log(openings_fen[opening.current])
+
+    allowDrag.current = false
+    setGame(new Chess(openings_fen[new_opening]));
+  }
+  
   return (
   <div className="container mx-auto p-4">
     {/* Mobile: stacked, Desktop: side-by-side */}
     <div className="flex flex-col md:flex-row gap-4">
       {/* Chess board */}
       <div className="w-full md:w-2/3">
-        <Chessboard position={game.fen()} onPieceDrop={onDrop} />
+        <Chessboard position={game.fen()} onPieceDrop={onDrop} arePiecesDraggable={allowDrop.current}/>
 
       {/* Controls & Info */}
       <div className="w-full">
         <div className="bg-gray-100 p-4 rounded">
           <h2>Position Information</h2>
           <p>{feedback}</p>
-          <select onChange={(e) => displayOpening(e.target.value, opening, setGame)}>
+          <select onChange={(e) => displayOpening(e.target.value, opening, setGame, allowDrop)}>
             <option value="random">Random</option>
             <option value="italian">Italian Game</option>
             <option value="sicilian">Sicilian Defense</option>
@@ -126,7 +132,7 @@ function onDrop(sourceSquare, targetSquare) {
                     onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                   />
                 </div>
-          <button onClick={() => loadRandomPosition(setGame, opening)}>Next Position</button>
+          <button onClick={() => loadRandomPosition(setGame, opening, allowDrop)}>Next Position</button>
         </div>
       </div>
       
