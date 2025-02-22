@@ -21,11 +21,14 @@ const openings_fen = {
     }
   }
 
-  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, prevFEN) {
+  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, prevFEN) {
     // re-set move text before re-render
     masterMove0.current = "";
     masterMove1.current = "";
     masterMove2.current = "";
+    normieMove0.current = "";
+    normieMove1.current = "";
+    normieMove2.current = "";
 
     // re-render current opening before displaying new position
     setGame(new Chess(openings_fen[opening.current]))
@@ -79,6 +82,12 @@ const openings_fen = {
     // TODO: GRAB NORMIE MOVES
     const response2 = await fetch(`/lichess/lichess?fen=${localFEN}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
     const data2 =  await response2.json()
+    console.log(data2.moves[0])
+    console.log(data2.moves[1])
+    console.log(data2.moves[2])
+    normieMove0.current = data2.moves[0] != undefined ? data2.moves[0].uci : "No move found";
+    normieMove1.current = data2.moves[1] != undefined ? data2.moves[1].uci : "No move found";
+    normieMove2.current = data2.moves[2] != undefined ? data2.moves[2].uci : "No move found";
   }
 
 
@@ -94,6 +103,9 @@ const prevFEN = useRef(game.fen());
 const masterMove0 = useRef("");
 const masterMove1 = useRef("");
 const masterMove2 = useRef("");
+const normieMove0 = useRef("");
+const normieMove1 = useRef("");
+const normieMove2 = useRef("");
 
 // Define the onDrop function
 function onDrop(sourceSquare, targetSquare) {
@@ -123,6 +135,9 @@ function onDrop(sourceSquare, targetSquare) {
     masterMove0.current = "";
     masterMove1.current = "";
     masterMove2.current = "";
+    normieMove0.current = "";
+    normieMove1.current = "";
+    normieMove2.current = "";
 
     opening.current = new_opening;
     // Update the game state
@@ -164,7 +179,7 @@ function onDrop(sourceSquare, targetSquare) {
                       onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                     />
                   </div>
-            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, prevFEN)}>Next Position</button>
+            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, prevFEN)}>Next Position</button>
           </div>
         </div>
       </div>
@@ -175,6 +190,10 @@ function onDrop(sourceSquare, targetSquare) {
               <p>Master Move 0:{masterMove0.current}</p>
               <p>Master Move 1:{masterMove1.current}</p>
               <p>Master Move 2:{masterMove2.current}</p>
+              <h3 className="text-l font-bold mb-4">Popular Moves over {minELO}</h3> 
+              <p>Move 0:{normieMove0.current}</p>
+              <p>Move 1:{normieMove1.current}</p>
+              <p>Move 2:{normieMove2.current}</p>
           </div>
         </div>
     </div>
