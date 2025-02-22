@@ -21,7 +21,7 @@ const openings_fen = {
     }
   }
 
-  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, prevFEN) {
+  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN) {
     // re-set move text before re-render
     masterMove0.current = "";
     masterMove1.current = "";
@@ -29,6 +29,7 @@ const openings_fen = {
     normieMove0.current = "";
     normieMove1.current = "";
     normieMove2.current = "";
+    yourMove.current = ""
 
     // re-render current opening before displaying new position
     setGame(new Chess(openings_fen[opening.current]))
@@ -106,6 +107,7 @@ const masterMove2 = useRef("");
 const normieMove0 = useRef("");
 const normieMove1 = useRef("");
 const normieMove2 = useRef("");
+const yourMove = useRef("");
 
 // Define the onDrop function
 function onDrop(sourceSquare, targetSquare) {
@@ -118,6 +120,8 @@ function onDrop(sourceSquare, targetSquare) {
       // If the move is illegal, return false to revert
       if (move === null) return false;
 
+      // update yourMove before re-render
+      yourMove.current = move.san;
       // Update the game state
       setGame(new Chess(game.fen()));
       allowDrop.current = false;
@@ -138,6 +142,7 @@ function onDrop(sourceSquare, targetSquare) {
     normieMove0.current = "";
     normieMove1.current = "";
     normieMove2.current = "";
+    yourMove.current = "";
 
     opening.current = new_opening;
     // Update the game state
@@ -179,13 +184,14 @@ function onDrop(sourceSquare, targetSquare) {
                       onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                     />
                   </div>
-            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, prevFEN)}>Next Position</button>
+            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN)}>Next Position</button>
           </div>
         </div>
       </div>
         <div className="w-full md:w-1/3">
           <div className="bg-cream-100 p-4 rounded">
             <h2 className="text-xl font-bold mb-4">Move Analysis</h2> 
+              <h3 className="text-l font-bold mb-4">Your Move: {yourMove.current}</h3> 
               <h3 className="text-l font-bold mb-4">Popular Master Moves</h3> 
               <p>Master Move 0:{masterMove0.current}</p>
               <p>Master Move 1:{masterMove1.current}</p>
