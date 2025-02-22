@@ -21,17 +21,22 @@ const openings_fen = {
     }
   }
 
-  async function loadRandomPosition(setGame, opening, minELO, allowDrop) {
+  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, prevFEN) {
+    // re-set move text before re-render
+    masterMove0.current = "";
+    masterMove1.current = "";
+    masterMove2.current = "";
 
     // re-render current opening before displaying new position
     setGame(new Chess(openings_fen[opening.current]))
 
+    // get random numbers of moves to go ahead
     let numMoves = random.integer(1, 7)
     console.log("Num random moves: " + numMoves)
-    let year = random.integer(1980, 2024)
-    let month = random.integer(0, 12)
     
     let position_fen = openings_fen[opening.current]
+    
+    // loop through numMoves times, grabbing the most popular moves, choosing a random one, and playing it
     for (let i = 0; i < numMoves; i++) {
       // const response = await fetch(`/lichess/masters?fen=${openings_fen[opening]}`).catch(error => {console.log("INVALID DATA2")})
       const response = await fetch(`/lichess/lichess?fen=${position_fen}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
@@ -52,8 +57,28 @@ const openings_fen = {
 
     }
     
-    allowDrop.current = true
+    // re-render
     setGame(new Chess(position_fen))
+    
+    // after re-render, grab info for best moves on the board
+    prevFEN.current = position_fen
+    allowDrop.current = true;
+    const localFEN = prevFEN.current
+    const response = await fetch(`/lichess/masters?fen=${localFEN}`).catch(error => {console.log("INVALID DATA2")})
+    // const response = await fetch(`/lichess/lichess?fen=${game.fen()}&ratings=2200`).catch(error => {console.log("INVALID DATA2")})
+    const data =  await response.json()
+    console.log("Opening: " + opening.current);
+    console.log("FEN: " + prevFEN.current);
+    console.log(data.moves[0])
+    console.log(data.moves[1])
+    console.log(data.moves[2])
+    masterMove0.current = data.moves[0] != undefined ? data.moves[0].uci : "No move found";
+    masterMove1.current = data.moves[1] != undefined ? data.moves[1].uci : "No move found";
+    masterMove2.current = data.moves[2] != undefined ? data.moves[2].uci : "No move found";
+    
+    // TODO: GRAB NORMIE MOVES
+    const response2 = await fetch(`/lichess/lichess?fen=${localFEN}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
+    const data2 =  await response2.json()
   }
 
 
@@ -61,44 +86,17 @@ function App() {
 // change 
 // Initialize the game state with a new Chess instance
 const [game, setGame] = useState(new Chess());
-const [feedback, setFeedback] = useState("Find the best move in this position");
 const [minELO, setMinELO] = useState("1800");
 const opening = useRef("random");
 const allowDrop = useRef(false);
 const needFetchInfo = useRef(false);
-const prevFEN = useRef(game.fen())
-
-async function fetchInfo() {
-  const localFEN = prevFEN.current
-  const response = await fetch(`/lichess/masters?fen=${localFEN}`).catch(error => {console.log("INVALID DATA2")})
-  // const response = await fetch(`/lichess/lichess?fen=${game.fen()}&ratings=2200`).catch(error => {console.log("INVALID DATA2")})
-  const data =  await response.json()
-  console.log(data.moves[0])
-  console.log(data.moves[1])
-  console.log(data.moves[2])
-  
-  // TODO: trigger all these BEFORE onDrop, probably by moving where needFetchInfo is changed to true
-  if (data.moves[0] == undefined && data.moves[2] == undefined && data.moves[3] == undefined) {
-    const response = await fetch(`/lichess/lichess?fen=${localFEN}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
-    const data =  await response.json()
-    console.log(data.moves[0])
-    console.log(data.moves[1])
-    console.log(data.moves[2])
-    
-  }
-}
-  
-const fetchPositionInfo = useEffect(() => {
-  if (needFetchInfo.current) {
-    fetchInfo();
-    needFetchInfo.current = false;
-  }
-
-}, [allowDrop.current])
+const prevFEN = useRef(game.fen());
+const masterMove0 = useRef("");
+const masterMove1 = useRef("");
+const masterMove2 = useRef("");
 
 // Define the onDrop function
 function onDrop(sourceSquare, targetSquare) {
-  prevFEN.current = game.fen()
   try {
     // Check if the move is legal
     const move = game.move({
@@ -109,7 +107,6 @@ function onDrop(sourceSquare, targetSquare) {
       if (move === null) return false;
 
       // Update the game state
-      needFetchInfo.current = true;
       setGame(new Chess(game.fen()));
       allowDrop.current = false;
       return true;
@@ -121,6 +118,7 @@ function onDrop(sourceSquare, targetSquare) {
   
 
   function displayOpening(new_opening, opening, setGame, allowDrag) {
+    // TODO: ADD IN RESET FOR MOVES INFO HERE, so that when reset !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     opening.current = new_opening;
     // Update the game state
     console.log(opening.current)
@@ -138,35 +136,42 @@ function onDrop(sourceSquare, targetSquare) {
       <div className="w-full md:w-2/3">
         <Chessboard position={game.fen()} onPieceDrop={onDrop} arePiecesDraggable={allowDrop.current} animationDuration={300}/>
 
-      {/* Controls & Info */}
-      <div className="w-full">
-        <div className="bg-gray-100 p-4 rounded">
-          <h2>Position Information</h2>
-          <p>{feedback}</p>
-          <select onChange={(e) => displayOpening(e.target.value, opening, setGame, allowDrop)}>
-            <option value="random">Random</option>
-            <option value="italian">Italian Game</option>
-            <option value="sicilian">Sicilian Defense</option>
-            <option value="french">French Defense</option>
-            <option value="caro">Caro Kann</option>
-          </select>
-        <h2>ELO Rating Input</h2>
-                <div>
-                  <label htmlFor="eloInput">Enter ELO Rating (0-2500):</label>
-                  <input
-                    id="eloInput"
-                    type="number"
-                    min="0"
-                    max="2500"
-                    value={minELO}
-                    onChange={(e) => updateMinELO(e.target.value, setMinELO)}
-                  />
-                </div>
-          <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop)}>Next Position</button>
+        {/* Controls & Info */}
+        <div className="w-full">
+          <div className="bg-gray-100 p-4 rounded">
+            <h2>Please Select an Opening to Study</h2>
+            <select onChange={(e) => displayOpening(e.target.value, opening, setGame, allowDrop)}>
+              <option value="random">Random</option>
+              <option value="italian">Italian Game</option>
+              <option value="sicilian">Sicilian Defense</option>
+              <option value="french">French Defense</option>
+              <option value="caro">Caro Kann</option>
+            </select>
+              <h2>ELO Rating Input</h2>
+                  <div>
+                    <label htmlFor="eloInput">Enter ELO Rating (0-2500):</label>
+                    <input
+                      id="eloInput"
+                      type="number"
+                      min="0"
+                      max="2500"
+                      value={minELO}
+                      onChange={(e) => updateMinELO(e.target.value, setMinELO)}
+                    />
+                  </div>
+            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, prevFEN)}>Next Position</button>
+          </div>
         </div>
       </div>
-      
-      </div>
+        <div className="w-full md:w-1/3">
+          <div className="bg-cream-100 p-4 rounded">
+            <h2 className="text-xl font-bold mb-4">Move Analysis</h2> 
+              <h3 className="text-l font-bold mb-4">Popular Master Moves</h3> 
+              <p>Master Move 0:{masterMove0.current}</p>
+              <p>Master Move 1:{masterMove1.current}</p>
+              <p>Master Move 2:{masterMove2.current}</p>
+          </div>
+        </div>
     </div>
   </div>
   )
