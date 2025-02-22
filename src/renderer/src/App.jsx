@@ -52,21 +52,37 @@ function App() {
   
   async function loadRandomPosition() {
     let numMoves = random.integer(1, 7)
+    console.log(numMoves)
     let year = random.integer(1980, 2024)
     let month = random.integer(0, 12)
-    // TODO: REPLACE SINCE AND UNTIL WITH RANDOM YEARS
-    const response = await fetch(`/lichess/masters?fen=${openings_fen[opening]}`).catch(error => {console.log("INVALID DATA2")})
-    const data =  await response.json()
-    console.log(data)
-    console.log(data.moves.length)
+    
+    let position_fen = openings_fen[opening]
+    for (let i = 0; i < numMoves; i++) {
+      // const response = await fetch(`/lichess/masters?fen=${openings_fen[opening]}`).catch(error => {console.log("INVALID DATA2")})
+      const response = await fetch(`/lichess/lichess?fen=${position_fen}&ratings=2200`).catch(error => {console.log("INVALID DATA2")})
+      const data =  await response.json()
+      let moveNum = random.integer(0, data.moves.length - 1)
+      
+      console.log(data)
+      console.log(data.moves[moveNum].uci)
+      let board = new Chess(position_fen) 
+      board.move({
+        from: data.moves[moveNum].uci.substring(0, 2),
+        to: data.moves[moveNum].uci.substring(2, 4),
+      })
+      position_fen = board.fen()
+
+    }
+    
+    setGame(new Chess(position_fen))
 
     // year = 2016
     // month = 12
-    fetch(`/lichess/lichess?fen=${openings_fen[opening]}&ratings=2200`).then(response => response.json()).then(data => {
-      //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
-      console.log(data);
-      console.log(data.moves.length)
-    }).catch(error => {console.log("INVALID DATA2")})
+    // fetch(`/lichess/lichess?fen=${openings_fen[opening]}&ratings=2200`).then(response => response.json()).then(data => {
+    //   //TODO: ADD DATA UPDATING BOARD HERE!!!!!!!!!!!
+    //   console.log(data);
+    //   console.log(data.moves.length)
+    // }).catch(error => {console.log("INVALID DATA2")})
   }
   
   function displayOpening(opening) {
