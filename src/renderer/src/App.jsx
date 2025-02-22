@@ -14,24 +14,15 @@ const openings_fen = {
      caro: 'rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3'
 };
 
-function App() {
-  // Initialize the game state with a new Chess instance
-  const [game, setGame] = useState(new Chess());
-  const [feedback, setFeedback] = useState("Find the best move in this position");
-  const [opening, setOpening] = useState("random");
-  const [minELO, setMinELO] = useState("1800");
-  const [error, setError] = useState('');
-  
-  // Define the onDrop function
-  function onDrop(sourceSquare, targetSquare) {
-    try {
-      // Check if the move is legal
-      const move = game.move({
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: 'q', // always promote to queen for simplicity
-      });
-
+// Define the onDrop function
+function onDrop(sourceSquare, targetSquare, setGame) {
+  try {
+    // Check if the move is legal
+    const move = game.move({
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: 'q', // always promote to queen for simplicity
+    });
       // If the move is illegal, return false to revert
       if (move === null) return false;
 
@@ -43,14 +34,14 @@ function App() {
       return false;
     }
   }
-  
-  function updateMinELO(newELO) {
+
+  function updateMinELO(newELO, setMinELO) {
     if (newELO <= 2500 && newELO >= 0) {
     setMinELO(newELO)
     }
   }
-  
-  async function loadRandomPosition() {
+
+  async function loadRandomPosition(setGame, opening) {
     let numMoves = random.integer(1, 7)
     console.log(numMoves)
     let year = random.integer(1980, 2024)
@@ -84,8 +75,8 @@ function App() {
     //   console.log(data.moves.length)
     // }).catch(error => {console.log("INVALID DATA2")})
   }
-  
-  function displayOpening(opening) {
+
+  function displayOpening(opening, setOpening, setGame) {
     // Update the game state
     console.log(opening)
     console.log(openings_fen[opening])
@@ -94,6 +85,14 @@ function App() {
     setGame(new Chess(openings_fen[opening]));
   }
 
+function App() {
+// change 
+// Initialize the game state with a new Chess instance
+const [game, setGame] = useState(new Chess());
+const [feedback, setFeedback] = useState("Find the best move in this position");
+const [opening, setOpening] = useState("random");
+const [minELO, setMinELO] = useState("1800");
+  
   return (
   <div className="container mx-auto p-4">
     {/* Mobile: stacked, Desktop: side-by-side */}
@@ -107,7 +106,7 @@ function App() {
         <div className="bg-gray-100 p-4 rounded">
           <h2>Position Information</h2>
           <p>{feedback}</p>
-          <select onChange={(e) => displayOpening(e.target.value)}>
+          <select onChange={(e) => displayOpening(e.target.value, setOpening, setGame)}>
             <option value="random">Random</option>
             <option value="italian">Italian Game</option>
             <option value="sicilian">Sicilian Defense</option>
@@ -123,10 +122,10 @@ function App() {
                     min="0"
                     max="2500"
                     value={minELO}
-                    onChange={(e) => updateMinELO(e.target.value)}
+                    onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                   />
                 </div>
-          <button onClick={loadRandomPosition}>Next Position</button>
+          <button onClick={() => loadRandomPosition(setGame, opening)}>Next Position</button>
         </div>
       </div>
       
