@@ -22,6 +22,14 @@ export default defineConfig({
           target: 'https://explorer.lichess.ovh',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/lichess/, '')
+        },
+        '/evalAPI': {
+          target: 'https://lichess.org',
+          changeOrigin: true,
+          rewrite: (path) => {
+            console.log("PROXY HIT: ", path);
+            return path.replace(/^\/evalAPI/, '/api/cloud-eval');
+          }
         }
       }
     }

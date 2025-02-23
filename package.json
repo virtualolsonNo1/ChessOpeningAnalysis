@@ -23,7 +23,8 @@
     "@tailwindcss/cli": "^4.0.7",
     "chess.js": "^1.0.0",
     "random-js": "^2.1.0",
-    "react-chessboard": "^4.7.2"
+    "react-chessboard": "^4.7.2",
+    "stockfish.js": "^10.0.2"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^2.0.0",

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { Random } from 'random-js';
+import stockfish from "stockfish.js";
 
 const random = new Random()
 
@@ -80,7 +81,7 @@ const openings_fen = {
     masterMove1.current = data.moves[1] != undefined ? data.moves[1].uci : "No move found";
     masterMove2.current = data.moves[2] != undefined ? data.moves[2].uci : "No move found";
     
-    // TODO: GRAB NORMIE MOVES
+    // GRAB NORMIE MOVES
     const response2 = await fetch(`/lichess/lichess?fen=${localFEN}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
     const data2 =  await response2.json()
     console.log(data2.moves[0])
@@ -89,7 +90,35 @@ const openings_fen = {
     normieMove0.current = data2.moves[0] != undefined ? data2.moves[0].uci : "No move found";
     normieMove1.current = data2.moves[1] != undefined ? data2.moves[1].uci : "No move found";
     normieMove2.current = data2.moves[2] != undefined ? data2.moves[2].uci : "No move found";
+
+    // GRAB ENGINE BEST MOVES
+    const move = await getBestMove(localFEN);
+    console.log("BEST MOVE: ", move);
+
   }
+
+function getBestMove(fen, depth = 15) {
+  return new Promise((resolve) => {
+    const stockfish = new Worker(new URL("stockfish.js", import.meta.url), {
+    type: "module",
+    });
+    
+    stockfish.postMessage("uci");
+    stockfish.postMessage("isready");
+    stockfish.postMessage("setoption name MultiPV value 3");
+    
+    stockfish.onmessage = (event) => {
+      console.log(event.data);
+      if (event.data.startsWith("bestmove")) {
+        const move = event.data.split(" ")[1];
+        resolve(move);
+        stockfish.terminate();
+      }
+    };
+    stockfish.postMessage(`position fen ${fen}`)
+    stockfish.postMessage(`go depth ${depth}`)
+  });
+}
 
 
 function App() {
