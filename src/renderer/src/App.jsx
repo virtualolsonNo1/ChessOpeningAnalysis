@@ -22,8 +22,11 @@ const openings_fen = {
     }
   }
 
-  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN) {
+  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN) {
     // re-set move text before re-render
+    stockfishMove0.current = {};
+    stockfishMove1.current = {};
+    stockfishMove2.current = {};
     masterMove0.current = "";
     masterMove1.current = "";
     masterMove2.current = "";
@@ -92,8 +95,14 @@ const openings_fen = {
     normieMove2.current = data2.moves[2] != undefined ? data2.moves[2].uci : "No move found";
 
     // GRAB ENGINE BEST MOVES
-    const move = await getBestMove(localFEN);
+    const move = await getBestMove(localFEN, 15, stockfishMove0, stockfishMove1, stockfishMove2);
     console.log("BEST MOVE: ", move);
+    stockfishMove0.current["UCI"] = move.move1UCI;
+    stockfishMove0.current["CP"] = move.move1CP;
+    stockfishMove1.current["UCI"] = move.move2UCI;
+    stockfishMove1.current["CP"] = move.move2CP;
+    stockfishMove2.current["UCI"] = move.move3UCI;
+    stockfishMove2.current["CP"] = move.move3CP;
 
   }
 
@@ -107,12 +116,23 @@ function getBestMove(fen, depth = 15) {
     stockfish.postMessage("isready");
     stockfish.postMessage("setoption name MultiPV value 3");
     
+    let move = {};
     stockfish.onmessage = (event) => {
       console.log(event.data);
-      if (event.data.startsWith("bestmove")) {
+      /* if (event.data.startsWith("bestmove")) {
         const move = event.data.split(" ")[1];
         resolve(move);
         stockfish.terminate();
+      } else  */
+      if (event.data.startsWith(`info depth ${depth}`) && event.data.includes("multipv")) {
+        const moveNum = event.data.split(" ")[6];
+        const cp = event.data.split(" ")[9];
+        const moveUCI = event.data.split(" ")[21];
+        move[`move${moveNum}CP`] = cp;  
+        move[`move${moveNum}UCI`] = moveUCI;  
+        if (moveNum == 3) {
+          resolve(move);
+        }
       }
     };
     stockfish.postMessage(`position fen ${fen}`)
@@ -130,6 +150,9 @@ const opening = useRef("random");
 const allowDrop = useRef(false);
 const needFetchInfo = useRef(false);
 const prevFEN = useRef(game.fen());
+const stockfishMove0 = useRef({});
+const stockfishMove1 = useRef({});
+const stockfishMove2 = useRef({});
 const masterMove0 = useRef("");
 const masterMove1 = useRef("");
 const masterMove2 = useRef("");
@@ -165,6 +188,9 @@ function onDrop(sourceSquare, targetSquare) {
   function displayOpening(new_opening, opening, setGame, allowDrag) {
     // TODO: ADD IN RESET FOR MOVES INFO HERE, so that when reset !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // re-set move text before re-render
+    stockfishMove0.current = {};
+    stockfishMove1.current = {};
+    stockfishMove2.current = {};
     masterMove0.current = "";
     masterMove1.current = "";
     masterMove2.current = "";
@@ -213,7 +239,7 @@ function onDrop(sourceSquare, targetSquare) {
                       onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                     />
                   </div>
-            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN)}>Next Position</button>
+            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN)}>Next Position</button>
           </div>
         </div>
       </div>
@@ -221,14 +247,18 @@ function onDrop(sourceSquare, targetSquare) {
           <div className="bg-cream-100 p-4 rounded">
             <h2 className="text-xl font-bold mb-4">Move Analysis</h2> 
               <h3 className="text-l font-bold mb-4">Your Move: {yourMove.current}</h3> 
+              <h3 className="text-l font-bold mb-4">Stockfish Best Moves</h3> 
+              <p>Stockfish Move 0: {stockfishMove0.current["UCI"]}, CP: {stockfishMove0.current["CP"]}</p>
+              <p>Stockfish Move 1: {stockfishMove1.current["UCI"]}, CP: {stockfishMove1.current["CP"]}</p>
+              <p>Stockfish Move 2: {stockfishMove2.current["UCI"]}, CP: {stockfishMove2.current["CP"]}</p>
               <h3 className="text-l font-bold mb-4">Popular Master Moves</h3> 
-              <p>Master Move 0:{masterMove0.current}</p>
-              <p>Master Move 1:{masterMove1.current}</p>
-              <p>Master Move 2:{masterMove2.current}</p>
+              <p>Master Move 0: {masterMove0.current}</p>
+              <p>Master Move 1: {masterMove1.current}</p>
+              <p>Master Move 2: {masterMove2.current}</p>
               <h3 className="text-l font-bold mb-4">Popular Moves over {minELO}</h3> 
-              <p>Move 0:{normieMove0.current}</p>
-              <p>Move 1:{normieMove1.current}</p>
-              <p>Move 2:{normieMove2.current}</p>
+              <p>Move 0: {normieMove0.current}</p>
+              <p>Move 1: {normieMove1.current}</p>
+              <p>Move 2: {normieMove2.current}</p>
           </div>
         </div>
     </div>
