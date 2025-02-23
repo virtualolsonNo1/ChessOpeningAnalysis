@@ -22,6 +22,24 @@ const openings_fen = {
     }
   }
 
+
+  async function getMasterMoves(FEN) {
+    const response = await fetch(`/lichess/masters?fen=${FEN}`).catch(error => {console.log("INVALID DATA2")})
+    return await response.json()
+  }
+
+  async function getBestMoves(FEN, stockfishMove0, stockfishMove1, stockfishMove2) {
+    // GRAB ENGINE BEST MOVES
+    return await getBestMove(FEN, 15, stockfishMove0, stockfishMove1, stockfishMove2);
+  }
+
+  async function getNormieMoves(FEN, minELO) {
+    
+    // GRAB NORMIE MOVES
+    const response2 = await fetch(`/lichess/lichess?fen=${FEN}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")});
+    return await response2.json();
+  }
+
   async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN) {
     // re-set move text before re-render
     stockfishMove0.current = {};
@@ -75,31 +93,30 @@ const openings_fen = {
     allowDrop.current = true;
 
     // after re-render, grab info for best moves on the board
-    // Grab best master's moves
-    const localFEN = prevFEN.current
-    const response = await fetch(`/lichess/masters?fen=${localFEN}`).catch(error => {console.log("INVALID DATA2")})
-    const data =  await response.json()
-    console.log("Opening: " + opening.current);
-    console.log("FEN: " + prevFEN.current);
-    console.log(data.moves[0])
-    console.log(data.moves[1])
-    console.log(data.moves[2])
-    masterMove0.current = data.moves[0] != undefined ? data.moves[0].uci : "No move found";
-    masterMove1.current = data.moves[1] != undefined ? data.moves[1].uci : "No move found";
-    masterMove2.current = data.moves[2] != undefined ? data.moves[2].uci : "No move found";
+    // grab all best moves, doing so in parallel using Promise.all so io time on one starts others
+    const [masterMoves, normieMoves, stockfishMoves] = await Promise.all([
+      getMasterMoves(position_fen),
+      getNormieMoves(position_fen, minELO),
+      getBestMoves(position_fen, stockfishMove0, stockfishMove1, stockfishMove2)
+    ]);
     
-    // GRAB NORMIE MOVES
-    const response2 = await fetch(`/lichess/lichess?fen=${localFEN}&ratings=${minELO}`).catch(error => {console.log("INVALID DATA2")})
-    const data2 =  await response2.json()
-    console.log(data2.moves[0])
-    console.log(data2.moves[1])
-    console.log(data2.moves[2])
-    normieMove0.current = data2.moves[0] != undefined ? data2.moves[0].uci : "No move found";
-    normieMove1.current = data2.moves[1] != undefined ? data2.moves[1].uci : "No move found";
-    normieMove2.current = data2.moves[2] != undefined ? data2.moves[2].uci : "No move found";
 
-    // GRAB ENGINE BEST MOVES
-    const stockfishMoves = await getBestMove(localFEN, 15, stockfishMove0, stockfishMove1, stockfishMove2);
+    // update master best moves text
+    console.log(masterMoves.moves[0])
+    console.log(masterMoves.moves[1])
+    console.log(masterMoves.moves[2])
+    masterMove0.current = masterMoves.moves[0] != undefined ? masterMoves.moves[0].uci : "No move found";
+    masterMove1.current = masterMoves.moves[1] != undefined ? masterMoves.moves[1].uci : "No move found";
+    masterMove2.current = masterMoves.moves[2] != undefined ? masterMoves.moves[2].uci : "No move found";
+
+    // update normie best moves
+    console.log(normieMoves.moves[0])
+    console.log(normieMoves.moves[1])
+    console.log(normieMoves.moves[2])
+    normieMove0.current = normieMoves.moves[0] != undefined ? normieMoves.moves[0].uci : "No move found";
+    normieMove1.current = normieMoves.moves[1] != undefined ? normieMoves.moves[1].uci : "No move found";
+    normieMove2.current = normieMoves.moves[2] != undefined ? normieMoves.moves[2].uci : "No move found";
+
     console.log("BEST MOVE: ", stockfishMoves);
     stockfishMove0.current["UCI"] = stockfishMoves.move1UCI;
     stockfishMove0.current["CP"] = stockfishMoves.move1CP;
@@ -132,9 +149,13 @@ function getBestMove(fen, depth = 15) {
       // once final depth of analysis complete for each line, add first move and CP value to data to be returned
       if (event.data.startsWith(`info depth ${depth}`) && event.data.includes("multipv")) {
         // grab moveNum to check if this is final line, CP value, and UCI
-        const moveNum = event.data.split(" ")[6];
-        const cp = event.data.split(" ")[9];
-        const moveUCI = event.data.split(" ")[21];
+        const wordsArr = event.data.split(" ");
+        const cpIndex = wordsArr.indexOf("cp")
+        const cp = wordsArr[cpIndex + 1];
+        const moveNumIndex = wordsArr.indexOf("multipv")
+        const moveNum = wordsArr[moveNumIndex + 1]
+        const pvIndex = wordsArr.indexOf("pv")
+        const moveUCI = wordsArr[pvIndex + 1]
         
         // update stockfishMoves with these values
         stockfishMoves[`move${moveNum}CP`] = cp;  
