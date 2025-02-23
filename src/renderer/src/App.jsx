@@ -55,6 +55,8 @@ const openings_fen = {
       console.log(data)
       console.log(data.moves[moveNum].uci)
       let board = new Chess(position_fen) 
+      
+      // play move on the board
       board.move({
         from: data.moves[moveNum].uci.substring(0, 2),
         to: data.moves[moveNum].uci.substring(2, 4),
@@ -68,12 +70,14 @@ const openings_fen = {
     // re-render
     setGame(new Chess(position_fen))
     
-    // after re-render, grab info for best moves on the board
+    // TODO: IS PREVFEN EVEN NEEDED!!!!!!!
     prevFEN.current = position_fen
     allowDrop.current = true;
+
+    // after re-render, grab info for best moves on the board
+    // Grab best master's moves
     const localFEN = prevFEN.current
     const response = await fetch(`/lichess/masters?fen=${localFEN}`).catch(error => {console.log("INVALID DATA2")})
-    // const response = await fetch(`/lichess/lichess?fen=${game.fen()}&ratings=2200`).catch(error => {console.log("INVALID DATA2")})
     const data =  await response.json()
     console.log("Opening: " + opening.current);
     console.log("FEN: " + prevFEN.current);
@@ -95,46 +99,55 @@ const openings_fen = {
     normieMove2.current = data2.moves[2] != undefined ? data2.moves[2].uci : "No move found";
 
     // GRAB ENGINE BEST MOVES
-    const move = await getBestMove(localFEN, 15, stockfishMove0, stockfishMove1, stockfishMove2);
-    console.log("BEST MOVE: ", move);
-    stockfishMove0.current["UCI"] = move.move1UCI;
-    stockfishMove0.current["CP"] = move.move1CP;
-    stockfishMove1.current["UCI"] = move.move2UCI;
-    stockfishMove1.current["CP"] = move.move2CP;
-    stockfishMove2.current["UCI"] = move.move3UCI;
-    stockfishMove2.current["CP"] = move.move3CP;
+    const stockfishMoves = await getBestMove(localFEN, 15, stockfishMove0, stockfishMove1, stockfishMove2);
+    console.log("BEST MOVE: ", stockfishMoves);
+    stockfishMove0.current["UCI"] = stockfishMoves.move1UCI;
+    stockfishMove0.current["CP"] = stockfishMoves.move1CP;
+    stockfishMove1.current["UCI"] = stockfishMoves.move2UCI;
+    stockfishMove1.current["CP"] = stockfishMoves.move2CP;
+    stockfishMove2.current["UCI"] = stockfishMoves.move3UCI;
+    stockfishMove2.current["CP"] = stockfishMoves.move3CP;
 
   }
 
 function getBestMove(fen, depth = 15) {
+  // return promise once resolve from stockfish worker in new process
   return new Promise((resolve) => {
     const stockfish = new Worker(new URL("stockfish.js", import.meta.url), {
     type: "module",
     });
     
+    // post message to use uci format, check if stockfish is ready, and grab top 3 moves/lines
     stockfish.postMessage("uci");
     stockfish.postMessage("isready");
     stockfish.postMessage("setoption name MultiPV value 3");
     
-    let move = {};
+    // variable to store moves stockfish returns
+    let stockfishMoves = {};
+    
+    // on message, check if it's at max depth, and if so, grab info on these lines, returning resolve with moves info after 3rd one completed
     stockfish.onmessage = (event) => {
       console.log(event.data);
-      /* if (event.data.startsWith("bestmove")) {
-        const move = event.data.split(" ")[1];
-        resolve(move);
-        stockfish.terminate();
-      } else  */
+
+      // once final depth of analysis complete for each line, add first move and CP value to data to be returned
       if (event.data.startsWith(`info depth ${depth}`) && event.data.includes("multipv")) {
+        // grab moveNum to check if this is final line, CP value, and UCI
         const moveNum = event.data.split(" ")[6];
         const cp = event.data.split(" ")[9];
         const moveUCI = event.data.split(" ")[21];
-        move[`move${moveNum}CP`] = cp;  
-        move[`move${moveNum}UCI`] = moveUCI;  
+        
+        // update stockfishMoves with these values
+        stockfishMoves[`move${moveNum}CP`] = cp;  
+        stockfishMoves[`move${moveNum}UCI`] = moveUCI;  
+        
+        // if this is final line, return from promise successfully
         if (moveNum == 3) {
-          resolve(move);
+          resolve(stockfishMoves);
         }
       }
     };
+    
+    // send in FEN position for this analysis and start analyzing to depth of depth
     stockfish.postMessage(`position fen ${fen}`)
     stockfish.postMessage(`go depth ${depth}`)
   });
@@ -142,8 +155,6 @@ function getBestMove(fen, depth = 15) {
 
 
 function App() {
-// change 
-// Initialize the game state with a new Chess instance
 const [game, setGame] = useState(new Chess());
 const [minELO, setMinELO] = useState("1800");
 const opening = useRef("random");
@@ -186,7 +197,6 @@ function onDrop(sourceSquare, targetSquare) {
   
 
   function displayOpening(new_opening, opening, setGame, allowDrag) {
-    // TODO: ADD IN RESET FOR MOVES INFO HERE, so that when reset !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // re-set move text before re-render
     stockfishMove0.current = {};
     stockfishMove1.current = {};
