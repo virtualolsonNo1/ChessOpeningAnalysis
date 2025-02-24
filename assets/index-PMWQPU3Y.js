@@ -17134,7 +17134,7 @@ async function getNormieMoves(FEN, minELO) {
   });
   return await response2.json();
 }
-async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove) {
+async function loadRandomPosition(setGame, opening, minELO, setMinELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove) {
   stockfishMove0.current = {};
   stockfishMove1.current = {};
   stockfishMove2.current = {};
@@ -17206,6 +17206,9 @@ async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetch
   stockfishMove1.current["CP"] = stockfishMoves.move2CP;
   stockfishMove2.current["UCI"] = stockfishMoves.move3UCI;
   stockfishMove2.current["CP"] = stockfishMoves.move3CP;
+  if (allowDrop.current == false) {
+    setMinELO(minELO + 0);
+  }
 }
 function getBestMove(fen, depth = 15) {
   return new Promise((resolve) => {
@@ -17343,7 +17346,7 @@ function App() {
                 onChange: (e) => updateMinELO(e.target.value, setMinELO)
               })]
             }), /* @__PURE__ */ jsx("button", {
-              onClick: () => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove),
+              onClick: () => loadRandomPosition(setGame, opening, minELO, setMinELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove),
               children: "Next Position"
             })]
           })
