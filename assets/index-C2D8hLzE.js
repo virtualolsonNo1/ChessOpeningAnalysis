@@ -17120,7 +17120,7 @@ function updateMinELO(newELO, setMinELO) {
   }
 }
 async function getMasterMoves(FEN) {
-  const response = await fetch(`/lichess/masters?fen=${FEN}`).catch((error) => {
+  const response = await fetch(`https://explorer.lichess.ovh/masters?fen=${FEN}`).catch((error) => {
     console.log("INVALID DATA2");
   });
   return await response.json();
@@ -17129,7 +17129,7 @@ async function getBestMoves(FEN, stockfishMove0, stockfishMove1, stockfishMove2)
   return await getBestMove(FEN, 15);
 }
 async function getNormieMoves(FEN, minELO) {
-  const response2 = await fetch(`/lichess/lichess?fen=${FEN}&ratings=${minELO}`).catch((error) => {
+  const response2 = await fetch(`https://explorer.lichess.ovh/lichess?fen=${FEN}&ratings=${minELO}`).catch((error) => {
     console.log("INVALID DATA2");
   });
   return await response2.json();
@@ -17150,7 +17150,7 @@ async function loadRandomPosition(setGame, opening, minELO, setMinELO, allowDrop
   console.log("Num random moves: " + numMoves);
   let position_fen = openings_fen[opening.current];
   for (let i = 0; i < numMoves; i++) {
-    const response = await fetch(`/lichess/lichess?fen=${position_fen}&ratings=${minELO}`).catch((error) => {
+    const response = await fetch(`https://explorer.lichess.ovh/lichess?fen=${position_fen}&ratings=${minELO}`).catch((error) => {
       console.log("INVALID DATA2");
     });
     const data = await response.json();
