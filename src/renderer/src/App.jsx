@@ -150,6 +150,7 @@ const openings_fen = {
     stockfishMove2.current["UCI"] = stockfishMoves.move3UCI;
     stockfishMove2.current["CP"] = stockfishMoves.move3CP;
     
+    // TODO: FIX WITH NEW useState or whatever
     // re-render if person already played move so best moves still show up
     if (allowDrop.current == false) {
       setMinELO(minELO + 0);
