@@ -77,7 +77,8 @@ const openings_fen = {
 
       let fromSquare = data.moves[moveNum].uci.substring(0, 2);
       let toSquare = data.moves[moveNum].uci.substring(2, 4);
-      // TODO: ADD IN EN PASSANT CODE??????!!!!!!!!
+      
+      // check for castling, as notation is different between javascript chess library to/from square and lichess uci response
       if (data.moves[moveNum].san == 'O-O') {
         if (fromSquare == "e1") {
           console.log("WHITE SHORT CASTLING!!!!!!!!!")
