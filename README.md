@@ -1,3 +1,3 @@
 TODO:
-- make it so there's a loading bar or something while stockfish not done, as it can take a few seconds, so if move played before that, eval will be too late to be rendered...
-    - or just make useState lol/something to re-render after those have loaded, maybe using drop canDrop bool????
+- switch to node.js or something and host?????
+- better querying (i.e. not random of all (up to 12) top moves, but check how many moves make up top say, 80%, and then pick a random one of those, filter by time control so blitz, bullet, ultrabullet, etc., aren't skewing results, etc
