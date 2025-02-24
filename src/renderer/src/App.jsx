@@ -41,7 +41,7 @@ const openings_fen = {
     return await response2.json();
   }
 
-  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove) {
+  async function loadRandomPosition(setGame, opening, minELO, setMinELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove) {
     // re-set move text before re-render
     stockfishMove0.current = {};
     stockfishMove1.current = {};
@@ -149,6 +149,11 @@ const openings_fen = {
     stockfishMove1.current["CP"] = stockfishMoves.move2CP;
     stockfishMove2.current["UCI"] = stockfishMoves.move3UCI;
     stockfishMove2.current["CP"] = stockfishMoves.move3CP;
+    
+    // re-render if person already played move so best moves still show up
+    if (allowDrop.current == false) {
+      setMinELO(minELO + 0);
+    }
 
   }
 
@@ -295,7 +300,7 @@ function onDrop(sourceSquare, targetSquare) {
                       onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                     />
                   </div>
-            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove)}>Next Position</button>
+            <button onClick={() => loadRandomPosition(setGame, opening, minELO, setMinELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove)}>Next Position</button>
           </div>
         </div>
       </div>
