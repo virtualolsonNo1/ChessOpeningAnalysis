@@ -11,6 +11,7 @@ const openings_fen = {
      random: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
      italian: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3',
      sicilian: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2',
+     sicilian_yugoslov: 'rnbqkb1r/pp2pp1p/3p1np1/8/3NP3/2N1B3/PPP2PPP/R2QKB1R b KQkq - 0 6',
      french: 'rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3',
      caro: 'rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3'
 };
@@ -78,17 +79,26 @@ const openings_fen = {
       let toSquare = data.moves[moveNum].uci.substring(2, 4);
       // TODO: ADD IN EN PASSANT CODE??????!!!!!!!!
       if (data.moves[moveNum].san == 'O-O') {
-        console.log("WHITE SHORT CASTLING!!!!!!!!!")
-        toSquare = "g1";
+        if (fromSquare == "e1") {
+          console.log("WHITE SHORT CASTLING!!!!!!!!!")
+          toSquare = "g1";
+        } else if (fromSquare == "e8") {
+          console.log("BLACK SHORT CASTLING!!!!!!!!!")
+          toSquare = "g8";
+        }
 
       } else if (data.moves[moveNum].san == 'O-O-O') {
+        if (fromSquare == "e1") {
+          console.log("WHITE LONG CASTLING!!!!!!!!!")
+          toSquare = "c1";
+        } else if (fromSquare == "e8") {
+          console.log("BLACK LONG CASTLING!!!!!!!!!")
+          toSquare = "c8";
+        }
         
-      } else if (data.moves[moveNum].san == 'o-o') {
+      }         
 
-      } else if (data.moves[moveNum].san == 'o-o-o') {
-
-      }
-        // play move on the board
+      // play move on the board
         board.move({
           from: fromSquare,
           to: toSquare,
@@ -268,6 +278,7 @@ function onDrop(sourceSquare, targetSquare) {
               <option value="random">Random</option>
               <option value="italian">Italian Game</option>
               <option value="sicilian">Sicilian Defense</option>
+              <option value="sicilian_yugoslov">Sicilian Defense Yugoslov Attack</option>
               <option value="french">French Defense</option>
               <option value="caro">Caro Kann</option>
             </select>
