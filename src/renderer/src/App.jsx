@@ -40,7 +40,7 @@ const openings_fen = {
     return await response2.json();
   }
 
-  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN) {
+  async function loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove) {
     // re-set move text before re-render
     stockfishMove0.current = {};
     stockfishMove1.current = {};
@@ -73,12 +73,27 @@ const openings_fen = {
       console.log(data)
       console.log(data.moves[moveNum].uci)
       let board = new Chess(position_fen) 
-      
-      // play move on the board
-      board.move({
-        from: data.moves[moveNum].uci.substring(0, 2),
-        to: data.moves[moveNum].uci.substring(2, 4),
-      })
+
+      let fromSquare = data.moves[moveNum].uci.substring(0, 2);
+      let toSquare = data.moves[moveNum].uci.substring(2, 4);
+      // TODO: ADD IN EN PASSANT CODE??????!!!!!!!!
+      if (data.moves[moveNum].san == 'O-O') {
+        console.log("WHITE SHORT CASTLING!!!!!!!!!")
+        toSquare = "g1";
+
+      } else if (data.moves[moveNum].san == 'O-O-O') {
+        
+      } else if (data.moves[moveNum].san == 'o-o') {
+
+      } else if (data.moves[moveNum].san == 'o-o-o') {
+
+      }
+        // play move on the board
+        board.move({
+          from: fromSquare,
+          to: toSquare,
+        });
+
       position_fen = board.fen()
       // TODO: DO WE WANT TO TRY TO ANIMATE OUT MOVES? WASN"T SMOOTH PREVIOUSLY AS TWAS A LOT OF RENDERING!!!
       // setGame(new Chess(position_fen))
@@ -88,8 +103,7 @@ const openings_fen = {
     // re-render
     setGame(new Chess(position_fen))
     
-    // TODO: IS PREVFEN EVEN NEEDED!!!!!!!
-    prevFEN.current = position_fen
+    // allow pieces to be moved post-re-render with new position
     allowDrop.current = true;
 
     // after re-render, grab info for best moves on the board
@@ -181,7 +195,6 @@ const [minELO, setMinELO] = useState("1800");
 const opening = useRef("random");
 const allowDrop = useRef(false);
 const needFetchInfo = useRef(false);
-const prevFEN = useRef(game.fen());
 const stockfishMove0 = useRef({});
 const stockfishMove1 = useRef({});
 const stockfishMove2 = useRef({});
@@ -270,7 +283,7 @@ function onDrop(sourceSquare, targetSquare) {
                       onChange={(e) => updateMinELO(e.target.value, setMinELO)}
                     />
                   </div>
-            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove, prevFEN)}>Next Position</button>
+            <button onClick={() => loadRandomPosition(setGame, opening, minELO, allowDrop, needFetchInfo, stockfishMove0, stockfishMove1, stockfishMove2, masterMove0, masterMove1, masterMove2, normieMove0, normieMove1, normieMove2, yourMove)}>Next Position</button>
           </div>
         </div>
       </div>
